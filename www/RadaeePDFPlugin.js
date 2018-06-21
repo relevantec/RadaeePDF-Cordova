@@ -27,13 +27,19 @@
 //  v1.6.0
 
 var argscheck = require('cordova/argscheck'),
-    exec      = require('cordova/exec');
+        exec = require('cordova/exec');
 
-function RadaeePDFPlugin () {};
+function RadaeePDFPlugin() { };
 
-RadaeePDFPlugin.prototype.activateLicense = function(params, successCallback, errorCallback) {
+RadaeePDFPlugin.prototype.merge = function (params, success, failure) {
         params = params || {};
-                exec(successCallback, errorCallback, 'RadaeePDFPlugin', 'activateLicense', [params]);
+
+        exec(success, failure, 'RadaeePDFPlugin', 'merge', [params]);
+};
+
+RadaeePDFPlugin.prototype.activateLicense = function (params, successCallback, errorCallback) {
+        params = params || {};
+        exec(successCallback, errorCallback, 'RadaeePDFPlugin', 'activateLicense', [params]);
 };
 
 RadaeePDFPlugin.prototype.open = function (params, success, failure) {
@@ -44,9 +50,9 @@ RadaeePDFPlugin.prototype.open = function (params, success, failure) {
         exec(success, failure, 'RadaeePDFPlugin', 'show', [params]);
 };
 
-RadaeePDFPlugin.prototype.openFromAssets = function(params, successCallback, errorCallback) {
+RadaeePDFPlugin.prototype.openFromAssets = function (params, successCallback, errorCallback) {
         params = params || {};
-                exec(successCallback, errorCallback, 'RadaeePDFPlugin', 'openFromAssets', [params]);
+        exec(successCallback, errorCallback, 'RadaeePDFPlugin', 'openFromAssets', [params]);
 };
 
 RadaeePDFPlugin.prototype.getFileState = function (params, successCallback, errorCallback) {
@@ -127,7 +133,7 @@ RadaeePDFPlugin.prototype.setTitleBGColor = function (params, successCallback, e
         exec(successCallback, errorCallback, 'RadaeePDFPlugin', 'setTitleBGColor', [params]);
 };
 
-RadaeePDFPlugin.prototype.setToolbarEnabled = function(params, successCallback, errorCallback) { //iOS only
+RadaeePDFPlugin.prototype.setToolbarEnabled = function (params, successCallback, errorCallback) { //iOS only
 
         params = params || {};
 
@@ -183,55 +189,55 @@ RadaeePDFPlugin.prototype.renderAnnotToFile = function (params, successCallback,
 };
 
 // Callbacks
-               
+
 RadaeePDFPlugin.prototype.willShowReaderCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'willShowReaderCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'willShowReaderCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didShowReaderCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didShowReaderCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didShowReaderCallback', []);
 };
 
 RadaeePDFPlugin.prototype.willCloseReaderCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'willCloseReaderCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'willCloseReaderCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didCloseReaderCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didCloseReaderCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didCloseReaderCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didChangePageCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didChangePageCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didChangePageCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didSearchTermCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didSearchTermCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didSearchTermCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didTapOnPageCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didTapOnPageCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didTapOnPageCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didDoubleTapOnPageCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didDoubleTapOnPageCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didDoubleTapOnPageCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didLongPressOnPageCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didLongPressOnPageCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didLongPressOnPageCallback', []);
 };
 
 RadaeePDFPlugin.prototype.didTapOnAnnotationOfTypeCallback = function (successCallback) {
 
-	exec(successCallback, function(err){console.log(err)}, 'RadaeePDFPlugin', 'didTapOnAnnotationOfTypeCallback', []);
+        exec(successCallback, function (err) { console.log(err) }, 'RadaeePDFPlugin', 'didTapOnAnnotationOfTypeCallback', []);
 };
 
 module.exports = new RadaeePDFPlugin();

@@ -23,14 +23,16 @@
 package com.radaee.cordova;
 
 import android.content.Context;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.webkit.URLUtil;
 
+import com.radaee.pdf.Document;
 import com.radaee.pdf.Global;
 import com.radaee.pdf.Page;
 import com.radaee.reader.PDFViewAct;
 import com.radaee.reader.PDFViewController;
-import com.radaee.reader.R; 
+import com.radaee.reader.R;
 import com.radaee.util.BookmarkHandler;
 import com.radaee.util.RadaeePDFManager;
 import com.radaee.util.RadaeePluginCallback;
@@ -45,6 +47,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * define the method exposed by the RadaeePDFPlugin
@@ -61,11 +65,11 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
     private static CallbackContext sDidSearchTerm;
     private static CallbackContext sDidTapOnPage;
     private static CallbackContext sDidTapOnAnnot;
-	private static CallbackContext sDidDoubleTap;
+    private static CallbackContext sDidDoubleTap;
     private static CallbackContext sDidLongPress;
     private static final String TAG = "RadaeePDFPlugin";
 
-	/**
+    /**
      * Constructor.
      */
     public RadaeePDFPlugin() {
@@ -81,15 +85,16 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         mPdfManager = new RadaeePDFManager(this);
+        Global.Init(cordova.getActivity());
     }
-    
+
     /**
      * Executes the request and returns PluginResult.
      *
-     * @param action            The action to execute.
-     * @param args              JSONArry of arguments for the plugin.
-     * @param callbackContext   The callback id used when calling back into JavaScript.
-     * @return                  True if the action was valid, false if not.
+     * @param action          The action to execute.
+     * @param args            JSONArry of arguments for the plugin.
+     * @param callbackContext The callback id used when calling back into JavaScript.
+     * @return True if the action was valid, false if not.
      */
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         Context mContext = this.cordova.getActivity().getApplicationContext();
@@ -176,7 +181,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
                 mPdfManager.setThumbHeight(params.optInt("height"));
                 callbackContext.success("Height passed to the reader");
                 break;
-			case "setDebugMode":  //Sets the debug mode in Global
+            case "setDebugMode":  //Sets the debug mode in Global
                 params = args.getJSONObject(0);
                 mPdfManager.setDebugMode(params.optBoolean("mode"));
                 callbackContext.success("property set successfully");
@@ -217,9 +222,9 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
             case "getBookmarks":
                 handleBookmarkActions(action, args.getJSONObject(0), callbackContext);
                 break;
-			case "addAnnotAttachment":
+            case "addAnnotAttachment":
                 boolean result = mPdfManager.addAnnotAttachment(args.getJSONObject(0).optString("path"));
-                if(result) callbackContext.success("Attachment added successfully");
+                if (result) callbackContext.success("Attachment added successfully");
                 else callbackContext.error("Attachment error");
                 break;
             case "renderAnnotToFile":
@@ -251,11 +256,26 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
             case "didTapOnAnnotationOfTypeCallback":
                 sDidTapOnAnnot = callbackContext;
                 break;
-			case "didDoubleTapOnPageCallback":
+            case "didDoubleTapOnPageCallback":
                 sDidDoubleTap = callbackContext;
                 break;
             case "didLongPressOnPageCallback":
                 sDidLongPress = callbackContext;
+                break;
+            case "merge":
+                Uri inputUri;
+                JSONArray jsonArray = new JSONArray(args.getString(0));
+                List<String> listOfFiles = new ArrayList<String>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    inputUri = Uri.parse(jsonArray.getString(i));
+                    listOfFiles.add(inputUri.getPath());
+                }
+                for (int i = 0; i < listOfFiles.size(); i++) {
+                    if (i > 0) {
+                        this.concat_pdf(listOfFiles.get(0), listOfFiles.get(i));
+                    }
+                }
+                callbackContext.success("All Files Merged Successfully");
                 break;
             default:
                 return false;
@@ -264,9 +284,30 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
         return true;
     }
 
+    private void concat_pdf(String dst, String src) {
+        Document doc_dst = new Document();
+        Document doc_src = new Document();
+        doc_dst.Open(dst, null);
+        doc_dst.SetCache(Global.tmp_path + "/ttt.dat");
+        doc_src.Open(src, null);
+        Document.ImportContext ctx = doc_dst.ImportStart(doc_src);
+        int dstno = doc_dst.GetPageCount();
+        int srccnt = doc_src.GetPageCount();
+        int srcno = 0;
+        while (srcno < srccnt) {
+            doc_dst.ImportPage(ctx, srcno, dstno);
+            dstno++;
+            srcno++;
+        }
+        ctx.Destroy();
+        doc_src.Close();
+        doc_dst.Save();
+        doc_dst.Close();
+    }
+
     @Override
     public void willShowReader() {
-        if(sWillShowReader != null) {
+        if (sWillShowReader != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK);
             result.setKeepCallback(true);
             sWillShowReader.sendPluginResult(result);
@@ -275,7 +316,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void didShowReader() {
-        if(sDidShowReader != null) {
+        if (sDidShowReader != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK);
             result.setKeepCallback(true);
             sDidShowReader.sendPluginResult(result);
@@ -285,7 +326,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void willCloseReader() {
-        if(sWillCloseReader != null) {
+        if (sWillCloseReader != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK);
             result.setKeepCallback(true);
             sWillCloseReader.sendPluginResult(result);
@@ -294,7 +335,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void didCloseReader() {
-        if(sDidCloseReader != null) {
+        if (sDidCloseReader != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK);
             result.setKeepCallback(true);
             sDidCloseReader.sendPluginResult(result);
@@ -303,7 +344,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void didChangePage(int pageno) {
-        if(sDidChangePage != null) {
+        if (sDidChangePage != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK, pageno);
             result.setKeepCallback(true);
             sDidChangePage.sendPluginResult(result);
@@ -312,7 +353,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void didSearchTerm(String query, boolean found) {
-        if(sDidSearchTerm != null) {
+        if (sDidSearchTerm != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK, query);
             result.setKeepCallback(true);
             sDidSearchTerm.sendPluginResult(result);
@@ -321,7 +362,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void onBlankTapped(int pageno) {
-        if(sDidTapOnPage != null) {
+        if (sDidTapOnPage != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK, pageno);
             result.setKeepCallback(true);
             sDidTapOnPage.sendPluginResult(result);
@@ -331,7 +372,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
     @Override
     public void onAnnotTapped(Page.Annotation annot) {
         try {
-            if(sDidTapOnAnnot != null) {
+            if (sDidTapOnAnnot != null) {
                 JSONObject resultObject = new JSONObject();
                 resultObject.put("index", annot.GetIndexInPage());
                 resultObject.put("type", annot.GetType());
@@ -346,7 +387,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void onDoubleTapped(int pageno, float x, float y) {
-        if(sDidDoubleTap != null) {
+        if (sDidDoubleTap != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK, pageno);
             result.setKeepCallback(true);
             sDidDoubleTap.sendPluginResult(result);
@@ -355,7 +396,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     @Override
     public void onLongPressed(int pageno, float x, float y) {
-        if(sDidLongPress != null) {
+        if (sDidLongPress != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK, pageno);
             result.setKeepCallback(true);
             sDidLongPress.sendPluginResult(result);
@@ -364,7 +405,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
 
     private void handleBookmarkActions(String action, JSONObject params, CallbackContext callbackContext) {
         Context mContext = this.cordova.getActivity().getApplicationContext();
-        if(!Global.isLicenseActivated())
+        if (!Global.isLicenseActivated())
             Global.Init(mContext);
 
         String filePath = params.optString("pdfPath");
@@ -373,7 +414,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
             return;
         }
 
-        if(URLUtil.isFileUrl(filePath)) {
+        if (URLUtil.isFileUrl(filePath)) {
             String prefix = "file://";
             filePath = filePath.substring(filePath.indexOf(prefix) + prefix.length());
         }
@@ -404,7 +445,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
     private void handleRemoveBookmark(String filePath, int page, CallbackContext callbackContext) {
         Context mContext = this.cordova.getActivity().getApplicationContext();
 
-        if(mPdfManager.removeBookmark(page, filePath))
+        if (mPdfManager.removeBookmark(page, filePath))
             callbackContext.success("Bookmark deleted successfully for page " + page);
         else
             callbackContext.error(mContext.getString(R.string.bookmark_remove_error));
@@ -414,7 +455,7 @@ public class RadaeePDFPlugin extends CordovaPlugin implements RadaeePluginCallba
         Context mContext = this.cordova.getActivity().getApplicationContext();
 
         String bookmarks = mPdfManager.getBookmarksAsJson(filePath);
-        if(TextUtils.isEmpty(bookmarks))
+        if (TextUtils.isEmpty(bookmarks))
             callbackContext.error(mContext.getString(R.string.no_bookmarks));
         else
             callbackContext.success("Bookmarks json: " + bookmarks);
